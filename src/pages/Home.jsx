@@ -84,13 +84,13 @@ const Home = () => {
           alt={product.name || "Product image"} // Added fallback alt text for accessibility
           className={isFeatured ? styles.featuredImage : styles.productImage}
           onError={(e) => {
-            e.target.src = "/placeholder.jpg"; // Fallback if base64 is invalid
+            e.target.src = "/flash.png"; // Fallback if base64 is invalid
             e.target.alt = "Image not found"; // Update alt text on error
           }}
         />
       ) : (
         <img
-          src="/placeholder.jpg"
+          src="/flash.png"
           alt="Placeholder image" // More descriptive alt text for placeholder
           // Apply appropriate styles depending on context
           className={isFeatured ? styles.featuredImage : styles.productImage}
