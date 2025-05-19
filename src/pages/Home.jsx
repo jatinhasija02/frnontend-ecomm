@@ -8,36 +8,34 @@ import "slick-carousel/slick/slick-theme.css";
 
 const Home = () => {
   const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true); // New: State to manage loading status
-  const [error, setError] = useState(null); // New: State to manage fetch errors
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const navigate = useNavigate();
   const userID = sessionStorage.getItem("userID");
 
   useEffect(() => {
-    setLoading(true); // Start loading
-    setError(null); // Clear any previous errors
+    setLoading(true);
+    setError(null);
 
     axios
       .get(`${import.meta.env.VITE_BACKEND_URL}/products/approved`)
       .then((res) => {
         console.log("Fetched Products:", res.data);
         setProducts(res.data);
-        setLoading(false); // End loading on success
+        setLoading(false);
       })
       .catch((err) => {
         console.error("Error fetching approved products:", err);
-        setError("Failed to load products. Please try again later."); // Set user-friendly error message
-        setLoading(false); // End loading on error
+        setError("Failed to load products. Please try again later.");
+        setLoading(false);
       });
-  }, []); // Empty dependency array means this runs once on component mount
+  }, []);
 
-  // Extract unique categories (case-insensitive)
   const uniqueCategories = [
     ...new Set(products.map((p) => p.category?.toLowerCase())),
   ];
 
-  // Featured carousel settings: 4 products, autoplay, no dots
   const featuredSettings = {
     dots: false,
     infinite: true,
@@ -53,7 +51,6 @@ const Home = () => {
     ],
   };
 
-  // Category carousel settings: 7 products, no autoplay, with arrows
   const categorySettings = {
     dots: false,
     infinite: true,
@@ -69,59 +66,59 @@ const Home = () => {
     ],
   };
 
-  // Function to render product cards
-  const renderProductCard = (product, isFeatured = false) => (
-    <div
-      key={product.id} // Ensure product.id is unique and stable
-      className={isFeatured ? styles.featuredCard : styles.productCard}
-      onClick={() =>
-        userID ? navigate(`/products/${product.id}`) : navigate("/login")
-      }
-    >
-      {product.productImageBase64 ? (
-        <img
-          src={`data:image/jpeg;base64,${product.productImageBase64}`}
-          alt={product.name || "Product image"} // Added fallback alt text for accessibility
-          className={isFeatured ? styles.featuredImage : styles.productImage}
-          onError={(e) => {
-            e.target.src = "/flash.png"; // Fallback if base64 is invalid
-            e.target.alt = "Image not found"; // Update alt text on error
-          }}
-        />
-      ) : (
-        <img
-          src="/flash.png"
-          alt="Placeholder image" // More descriptive alt text for placeholder
-          // Apply appropriate styles depending on context
-          className={isFeatured ? styles.featuredImage : styles.productImage}
-        />
-      )}
-      {!isFeatured && (
-        <div className={styles.productInfo}>
-          <h3 className={styles.productName}>{product.name}</h3>
-          <p className={styles.productPrice}>₹{product.price}</p>
-        </div>
-      )}
-    </div>
-  );
+  const renderProductCard = (product, isFeatured = false) => {
+    // Dynamically determine the MIME type from the product object
+    // Provide a fallback if for some reason the MIME type isn't available
+    const imageMimeType = product.productImageMimeType || "image/jpeg";
+
+    return (
+      <div
+        key={product.id}
+        className={isFeatured ? styles.featuredCard : styles.productCard}
+        onClick={() =>
+          userID ? navigate(`/products/${product.id}`) : navigate("/login")
+        }
+      >
+        {product.productImageBase64 ? (
+          <img
+            // Use the dynamic imageMimeType here
+            src={`data:${imageMimeType};base64,${product.productImageBase64}`}
+            alt={product.name || "Product image"}
+            className={isFeatured ? styles.featuredImage : styles.productImage}
+            onError={(e) => {
+              e.target.src = "/flash.png";
+              e.target.alt = "Image not found";
+            }}
+          />
+        ) : (
+          <img
+            src="/flash.png"
+            alt="Placeholder image"
+            className={isFeatured ? styles.featuredImage : styles.productImage}
+          />
+        )}
+        {!isFeatured && (
+          <div className={styles.productInfo}>
+            <h3 className={styles.productName}>{product.name}</h3>
+            <p className={styles.productPrice}>₹{product.price}</p>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <section className={styles.homeContainer}>
       {loading ? (
-        // Display loading message while products are being fetched
         <p>Loading products...</p>
       ) : error ? (
-        // Display error message if fetching failed
         <p style={{ color: "red", textAlign: "center" }}>{error}</p>
       ) : products.length === 0 ? (
-        // Display message if no products are found after loading
         <p style={{ textAlign: "center" }}>
           No products available at the moment.
         </p>
       ) : (
-        // Render carousels once products are loaded and no error
         <>
-          {/* Featured Products Carousel */}
           <header className={styles.featuredHeader}>
             <h2>Featured Products</h2>
           </header>
@@ -131,12 +128,11 @@ const Home = () => {
             </Slider>
           </div>
 
-          {/* Category-wise Carousels */}
           {uniqueCategories.map((cat) => {
             const categoryProducts = products.filter(
               (p) => p.category?.toLowerCase() === cat
             );
-            if (categoryProducts.length === 0) return null; // Don't render empty categories
+            if (categoryProducts.length === 0) return null;
             return (
               <section key={cat} className={styles.categorySection}>
                 <h2>{cat.charAt(0).toUpperCase() + cat.slice(1)}</h2>
